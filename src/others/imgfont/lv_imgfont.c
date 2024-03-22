@@ -26,10 +26,9 @@ typedef struct {
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static const void * imgfont_get_glyph_bitmap(lv_font_glyph_dsc_t * g_dsc, uint32_t unicode,
-                                             lv_draw_buf_t * draw_buf);
-static bool imgfont_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_t * dsc_out,
-                                  uint32_t unicode, uint32_t unicode_next);
+static const void * imgfont_glyph_get_draw_data(lv_font_glyph_dsc_t * g_dsc, lv_draw_buf_t * draw_buf);
+static bool imgfont_glyph_get_info(const lv_font_t * font, lv_font_glyph_dsc_t * dsc_out,
+                                   uint32_t unicode, uint32_t unicode_next);
 
 /**********************
  *  STATIC VARIABLES
@@ -57,8 +56,8 @@ lv_font_t * lv_imgfont_create(uint16_t height, lv_imgfont_get_path_cb_t path_cb,
 
     lv_font_t * font = &dsc->font;
     font->dsc = dsc;
-    font->get_glyph_dsc = imgfont_get_glyph_dsc;
-    font->get_glyph_bitmap = imgfont_get_glyph_bitmap;
+    font->glyph_get_info = imgfont_glyph_get_info;
+    font->glyph_acquire_draw_data = imgfont_glyph_get_draw_data;
     font->subpx = LV_FONT_SUBPX_NONE;
     font->line_height = height;
     font->base_line = 0;
@@ -80,20 +79,16 @@ void lv_imgfont_destroy(lv_font_t * font)
  *   STATIC FUNCTIONS
  **********************/
 
-static const void * imgfont_get_glyph_bitmap(lv_font_glyph_dsc_t * g_dsc, uint32_t unicode,
-                                             lv_draw_buf_t * draw_buf)
+static const void * imgfont_glyph_get_draw_data(lv_font_glyph_dsc_t * g_dsc, lv_draw_buf_t * draw_buf)
 {
     LV_UNUSED(draw_buf);
-    const lv_font_t * font = g_dsc->resolved_font;
 
-    imgfont_dsc_t * dsc = (imgfont_dsc_t *)font->dsc;
-    int32_t offset_y = 0;
-    const void * img_src = dsc->path_cb(font, unicode, 0, &offset_y, dsc->user_data);
+    const void * img_src = g_dsc->gid.src;
     return img_src;
 }
 
-static bool imgfont_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_t * dsc_out,
-                                  uint32_t unicode, uint32_t unicode_next)
+static bool imgfont_glyph_get_info(const lv_font_t * font, lv_font_glyph_dsc_t * dsc_out,
+                                   uint32_t unicode, uint32_t unicode_next)
 {
     LV_ASSERT_NULL(font);
 
@@ -118,6 +113,7 @@ static bool imgfont_get_glyph_dsc(const lv_font_t * font, lv_font_glyph_dsc_t * 
     dsc_out->ofs_x  = 0;
     dsc_out->ofs_y  = offset_y;
     dsc_out->format = LV_FONT_GLYPH_FORMAT_IMAGE;   /* is image identifier */
+    dsc_out->gid.src = img_src;
 
     return true;
 }

@@ -30,8 +30,8 @@ typedef struct _lv_freetype_glyph_cache_data_t {
  *  STATIC PROTOTYPES
  **********************/
 
-static bool freetype_get_glyph_dsc_cb(const lv_font_t * font, lv_font_glyph_dsc_t * g_dsc, uint32_t unicode_letter,
-                                      uint32_t unicode_letter_next);
+static bool freetype_glyph_get_info_cb(const lv_font_t * font, lv_font_glyph_dsc_t * g_dsc, uint32_t unicode_letter,
+                                       uint32_t unicode_letter_next);
 
 static bool freetype_glyph_create_cb(lv_freetype_glyph_cache_data_t * data, void * user_data);
 static void freetype_glyph_free_cb(lv_freetype_glyph_cache_data_t * data, void * user_data);
@@ -66,15 +66,15 @@ lv_cache_t * lv_freetype_create_glyph_cache(uint32_t cache_size)
 void lv_freetype_set_cbs_glyph(lv_freetype_font_dsc_t * dsc)
 {
     LV_ASSERT_FREETYPE_FONT_DSC(dsc);
-    dsc->font.get_glyph_dsc = freetype_get_glyph_dsc_cb;
+    dsc->font.glyph_get_info = freetype_glyph_get_info_cb;
 }
 
 /**********************
  *   STATIC FUNCTIONS
  **********************/
 
-static bool freetype_get_glyph_dsc_cb(const lv_font_t * font, lv_font_glyph_dsc_t * g_dsc, uint32_t unicode_letter,
-                                      uint32_t unicode_letter_next)
+static bool freetype_glyph_get_info_cb(const lv_font_t * font, lv_font_glyph_dsc_t * g_dsc, uint32_t unicode_letter,
+                                       uint32_t unicode_letter_next)
 {
     LV_ASSERT_NULL(font);
     LV_ASSERT_NULL(g_dsc);
@@ -170,7 +170,7 @@ static bool freetype_glyph_create_cb(lv_freetype_glyph_cache_data_t * data, void
     }
 
     dsc_out->is_placeholder = glyph_index == 0;
-    dsc_out->glyph_index = glyph_index;
+    dsc_out->gid.index = (uint32_t)glyph_index;
 
     return true;
 }
