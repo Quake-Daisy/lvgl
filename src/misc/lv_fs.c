@@ -130,7 +130,7 @@ lv_fs_res_t lv_fs_open(lv_fs_file_t * file_p, const char * path, lv_fs_mode_t mo
     return LV_FS_RES_OK;
 }
 
-void lv_fs_make_path_from_buffer(lv_fs_path_ex_t * path, char letter, const void * buf, uint32_t size)
+void lv_fs_make_path_from_buffer(lv_fs_path_ex_t * path, char letter, const void * buf, size_t size)
 {
     path->path[0] = letter;
     path->path[1] = ':';
@@ -171,21 +171,21 @@ lv_fs_res_t lv_fs_close(lv_fs_file_t * file_p)
     return res;
 }
 
-static lv_fs_res_t lv_fs_read_cached(lv_fs_file_t * file_p, char * buf, uint32_t btr, uint32_t * br)
+static lv_fs_res_t lv_fs_read_cached(lv_fs_file_t * file_p, char * buf, size_t btr, size_t * br)
 {
     LV_PROFILER_BEGIN;
 
     lv_fs_res_t res = LV_FS_RES_OK;
-    uint32_t file_position = file_p->cache->file_position;
-    uint32_t start = file_p->cache->start;
-    uint32_t end = file_p->cache->end;
+    size_t file_position = file_p->cache->file_position;
+    size_t start = file_p->cache->start;
+    size_t end = file_p->cache->end;
     char * buffer = file_p->cache->buffer;
-    uint32_t buffer_size = file_p->drv->cache_size;
+    size_t buffer_size = file_p->drv->cache_size;
 
     if(start <= file_position && file_position <= end) {
         /* Data can be read from cache buffer */
-        uint32_t buffer_remaining_length = (uint32_t)end - file_position + 1;
-        uint32_t buffer_offset = (end - start) - buffer_remaining_length + 1;
+        size_t buffer_remaining_length = end - file_position + 1;
+        size_t buffer_offset = (end - start) - buffer_remaining_length + 1;
 
         /* Do not allow reading beyond the actual memory block for memory-mapped files */
         if(file_p->drv->cache_size == LV_FS_CACHE_FROM_BUFFER) {
@@ -205,7 +205,7 @@ static lv_fs_res_t lv_fs_read_cached(lv_fs_file_t * file_p, char * buf, uint32_t
             file_p->drv->seek_cb(file_p->drv, file_p->file_d, file_p->cache->end + 1,
                                  LV_FS_SEEK_SET);
 
-            uint32_t bytes_read_to_buffer = 0;
+            size_t bytes_read_to_buffer = 0;
             if(btr - buffer_remaining_length > buffer_size) {
                 /*If remaining data chuck is bigger than buffer size, then do not use cache, instead read it directly from FS*/
                 res = file_p->drv->read_cb(file_p->drv, file_p->file_d, (void *)(buf + buffer_remaining_length),
@@ -217,7 +217,7 @@ static lv_fs_res_t lv_fs_read_cached(lv_fs_file_t * file_p, char * buf, uint32_t
                 file_p->cache->start = file_p->cache->end + 1;
                 file_p->cache->end = file_p->cache->start + bytes_read_to_buffer - 1;
 
-                uint16_t data_chunk_remaining = LV_MIN(btr - buffer_remaining_length, bytes_read_to_buffer);
+                uint16_t data_chunk_remaining = (uint16_t)LV_MIN(btr - buffer_remaining_length, bytes_read_to_buffer);
                 lv_memcpy(buf + buffer_remaining_length, buffer, data_chunk_remaining);
             }
             *br = LV_MIN(buffer_remaining_length + bytes_read_to_buffer, btr);
@@ -240,7 +240,7 @@ static lv_fs_res_t lv_fs_read_cached(lv_fs_file_t * file_p, char * buf, uint32_t
                 buffer = file_p->cache->buffer;
             }
 
-            uint32_t bytes_read_to_buffer = 0;
+            size_t bytes_read_to_buffer = 0;
             res = file_p->drv->read_cb(file_p->drv, file_p->file_d, (void *)buffer, buffer_size, &bytes_read_to_buffer);
             file_p->cache->start = file_position;
             file_p->cache->end = file_p->cache->start + bytes_read_to_buffer - 1;
@@ -252,7 +252,7 @@ static lv_fs_res_t lv_fs_read_cached(lv_fs_file_t * file_p, char * buf, uint32_t
     }
 
     if(res == LV_FS_RES_OK) {
-        file_p->cache->file_position += *br;
+        file_p->cache->file_position += * br;
     }
 
     LV_PROFILER_END;
@@ -260,15 +260,14 @@ static lv_fs_res_t lv_fs_read_cached(lv_fs_file_t * file_p, char * buf, uint32_t
     return res;
 }
 
-lv_fs_res_t lv_fs_read(lv_fs_file_t * file_p, void * buf, uint32_t btr, uint32_t * br)
+lv_fs_res_t lv_fs_read(lv_fs_file_t * file_p, void * buf, size_t btr, size_t * br)
 {
     if(br != NULL) *br = 0;
     if(file_p->drv == NULL) return LV_FS_RES_INV_PARAM;
     if(file_p->drv->read_cb == NULL) return LV_FS_RES_NOT_IMP;
 
-    LV_PROFILER_BEGIN;
 
-    uint32_t br_tmp = 0;
+    size_t br_tmp = 0;
     lv_fs_res_t res;
 
     if(file_p->drv->cache_size) {
@@ -285,7 +284,7 @@ lv_fs_res_t lv_fs_read(lv_fs_file_t * file_p, void * buf, uint32_t btr, uint32_t
     return res;
 }
 
-lv_fs_res_t lv_fs_write(lv_fs_file_t * file_p, const void * buf, uint32_t btw, uint32_t * bw)
+lv_fs_res_t lv_fs_write(lv_fs_file_t * file_p, const void * buf, size_t btw, size_t * bw)
 {
     if(bw != NULL) *bw = 0;
 
@@ -310,7 +309,7 @@ lv_fs_res_t lv_fs_write(lv_fs_file_t * file_p, const void * buf, uint32_t btw, u
         }
     }
 
-    uint32_t bw_tmp = 0;
+    size_t bw_tmp = 0;
     res = file_p->drv->write_cb(file_p->drv, file_p->file_d, buf, btw, &bw_tmp);
     if(bw != NULL) *bw = bw_tmp;
 
@@ -322,7 +321,7 @@ lv_fs_res_t lv_fs_write(lv_fs_file_t * file_p, const void * buf, uint32_t btw, u
     return res;
 }
 
-lv_fs_res_t lv_fs_seek(lv_fs_file_t * file_p, uint32_t pos, lv_fs_whence_t whence)
+lv_fs_res_t lv_fs_seek(lv_fs_file_t * file_p, size_t pos, lv_fs_whence_t whence)
 {
     if(file_p->drv == NULL) {
         return LV_FS_RES_INV_PARAM;
@@ -361,7 +360,7 @@ lv_fs_res_t lv_fs_seek(lv_fs_file_t * file_p, uint32_t pos, lv_fs_whence_t whenc
                     /*Because we don't know the file size, we do a little trick: do a FS seek, then get the new file position from FS*/
                     res = file_p->drv->seek_cb(file_p->drv, file_p->file_d, pos, whence);
                     if(res == LV_FS_RES_OK) {
-                        uint32_t tmp_position;
+                        size_t tmp_position;
                         res = file_p->drv->tell_cb(file_p->drv, file_p->file_d, &tmp_position);
 
                         if(res == LV_FS_RES_OK) {
@@ -381,7 +380,7 @@ lv_fs_res_t lv_fs_seek(lv_fs_file_t * file_p, uint32_t pos, lv_fs_whence_t whenc
     return res;
 }
 
-lv_fs_res_t lv_fs_tell(lv_fs_file_t * file_p, uint32_t * pos)
+lv_fs_res_t lv_fs_tell(lv_fs_file_t * file_p, size_t * pos)
 {
     if(file_p->drv == NULL) {
         *pos = 0;
