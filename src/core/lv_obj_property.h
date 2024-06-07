@@ -58,8 +58,7 @@ enum {
     /*Special ID, use it to extend ID and make sure it's unique and compile time determinant*/
     LV_PROPERTY_ID_BUILTIN_LAST = 0x10000000,
 
-    /*Special ID used by lvgl to intercept all setter/getter call.*/
-    LV_PROPERTY_ID_ANY          = 0x7ffffffe,
+    LV_PROPERTY_ID_ANY          = 0x7ffffffe, /*Special ID used by lvgl to intercept all setter/getter call.*/
 };
 
 typedef uint32_t lv_prop_id_t;
