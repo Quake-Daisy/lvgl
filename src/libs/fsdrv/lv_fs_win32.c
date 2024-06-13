@@ -17,7 +17,7 @@
 /*********************
  *      DEFINES
  *********************/
-#if LV_FS_WIN32_LETTER == '\0'
+#if (LV_FS_WIN32_LETTER < 'A') || (LV_FS_WIN32_LETTER > 'Z')
     #error "LV_FS_WIN32_LETTER must be an upper case ASCII letter"
 #endif
 

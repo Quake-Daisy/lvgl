@@ -5,7 +5,7 @@
 #include <SPI.h>
 #include "SD.h"
 
-#if LV_FS_ARDUINO_SD_LETTER == '\0'
+#if (LV_FS_ARDUINO_SD_LETTER < 'A') || (LV_FS_ARDUINO_SD_LETTER > 'Z')
     #error "LV_FS_ARDUINO_SD_LETTER must be an upper case ASCII letter"
 #endif
 

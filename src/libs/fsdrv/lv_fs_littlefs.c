@@ -4,7 +4,7 @@
 #include "lfs.h"
 #include "../../core/lv_global.h"
 
-#if LV_FS_LITTLEFS_LETTER == '\0'
+#if (LV_FS_LITTLEFS_LETTER < 'A') || (LV_FS_LITTLEFS_LETTER > 'Z')
     #error "LV_FS_LITTLEFS_LETTER must be an upper case ASCII letter"
 #endif
 

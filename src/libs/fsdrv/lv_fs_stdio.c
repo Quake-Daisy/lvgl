@@ -21,7 +21,7 @@
 /*********************
  *      DEFINES
  *********************/
-#if LV_FS_STDIO_LETTER == '\0'
+#if (LV_FS_STDIO_LETTER < 'A') || (LV_FS_STDIO_LETTER > 'Z')
     #error "LV_FS_STDIO_LETTER must be an upper case ASCII letter"
 #endif
 

@@ -46,7 +46,7 @@
 /*********************
  *      DEFINES
  *********************/
-#if LV_FS_MEMFS_LETTER == '\0'
+#if (LV_FS_MEMFS_LETTER < 'A') || (LV_FS_MEMFS_LETTER > 'Z')
     #error "LV_FS_MEMFS_LETTER must be an upper case ASCII letter"
 #endif
 
