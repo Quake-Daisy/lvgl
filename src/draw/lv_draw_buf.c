@@ -107,14 +107,10 @@ void * lv_draw_buf_align_user(const lv_draw_buf_handlers_t * handlers, void * da
 
 void lv_draw_buf_invalidate_cache(const lv_draw_buf_t * draw_buf, const lv_area_t * area)
 {
-    lv_draw_buf_invalidate_cache_user(&default_handlers, draw_buf, area);
-}
-
-void lv_draw_buf_invalidate_cache_user(const lv_draw_buf_handlers_t * handlers, const lv_draw_buf_t * draw_buf,
-                                       const lv_area_t * area)
-{
     LV_ASSERT_NULL(draw_buf);
+    LV_ASSERT_NULL(draw_buf->handlers);
 
+    const lv_draw_buf_handlers_t * handlers = draw_buf->handlers;
     if(!handlers->invalidate_cache_cb) {
         return;
     }
@@ -130,14 +126,10 @@ void lv_draw_buf_invalidate_cache_user(const lv_draw_buf_handlers_t * handlers, 
 
 void lv_draw_buf_flush_cache(const lv_draw_buf_t * draw_buf, const lv_area_t * area)
 {
-    lv_draw_buf_flush_cache_user(&default_handlers, draw_buf, area);
-}
-
-void lv_draw_buf_flush_cache_user(const lv_draw_buf_handlers_t * handlers, const lv_draw_buf_t * draw_buf,
-                                  const lv_area_t * area)
-{
     LV_ASSERT_NULL(draw_buf);
+    LV_ASSERT_NULL(draw_buf->handlers);
 
+    const lv_draw_buf_handlers_t * handlers = draw_buf->handlers;
     if(!handlers->flush_cache_cb) {
         return;
     }
@@ -256,10 +248,11 @@ lv_result_t lv_draw_buf_init(lv_draw_buf_t * draw_buf, uint32_t w, uint32_t h, l
     header->flags = 0;
     header->magic = LV_IMAGE_HEADER_MAGIC;
 
-    draw_buf->data = lv_draw_buf_align(data, cf);
+    draw_buf->data = data;
     draw_buf->unaligned_data = data;
+    draw_buf->handlers = &default_handlers;
     draw_buf->data_size = data_size;
-    if(draw_buf->data != draw_buf->unaligned_data) {
+    if(lv_draw_buf_align(data, cf) != draw_buf->unaligned_data) {
         LV_LOG_WARN("Data is not aligned, ignored");
     }
     return LV_RESULT_OK;
@@ -298,6 +291,7 @@ lv_draw_buf_t * lv_draw_buf_create_user(const lv_draw_buf_handlers_t * handlers,
     draw_buf->data = lv_draw_buf_align(buf, cf);
     draw_buf->unaligned_data = buf;
     draw_buf->data_size = size;
+    draw_buf->handlers = handlers;
     return draw_buf;
 }
 
@@ -347,19 +341,17 @@ lv_draw_buf_t * lv_draw_buf_reshape(lv_draw_buf_t * draw_buf, lv_color_format_t 
     return draw_buf;
 }
 
-void lv_draw_buf_destroy(lv_draw_buf_t * buf)
+void lv_draw_buf_destroy(lv_draw_buf_t * draw_buf)
 {
-    lv_draw_buf_destroy_user(&default_handlers, buf);
-}
+    LV_ASSERT_NULL(draw_buf);
+    if(draw_buf == NULL) return;
 
-void lv_draw_buf_destroy_user(const lv_draw_buf_handlers_t * handlers, lv_draw_buf_t * buf)
-{
-    LV_ASSERT_NULL(buf);
-    if(buf == NULL) return;
+    if(draw_buf->header.flags & LV_IMAGE_FLAGS_ALLOCATED) {
+        LV_ASSERT_NULL(draw_buf->handlers);
 
-    if(buf->header.flags & LV_IMAGE_FLAGS_ALLOCATED) {
-        draw_buf_free(handlers, buf->unaligned_data);
-        lv_free(buf);
+        const lv_draw_buf_handlers_t * handlers = draw_buf->handlers;
+        draw_buf_free(handlers, draw_buf->unaligned_data);
+        lv_free(draw_buf);
     }
     else {
         LV_LOG_ERROR("draw buffer is not allocated, ignored");
