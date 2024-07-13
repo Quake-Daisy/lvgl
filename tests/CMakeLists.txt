@@ -69,6 +69,10 @@ set(LVGL_TEST_OPTIONS_VG_LITE
     -Wno-dangling-pointer # workaround for thorvg dangling-pointer warning
 )
 
+set(LVGL_TEST_OPTIONS_SDL
+    -DLV_TEST_OPTION=7
+)
+
 set(LVGL_TEST_OPTIONS_MINIMAL_MONOCHROME
     -DLV_TEST_OPTION=1
 )
@@ -106,6 +110,8 @@ set(LVGL_TEST_OPTIONS_TEST_DEFHEAP
 
 if (OPTIONS_VG_LITE)
     set (BUILD_OPTIONS ${LVGL_TEST_OPTIONS_VG_LITE})
+elseif (OPTIONS_SDL)
+    set (BUILD_OPTIONS ${LVGL_TEST_OPTIONS_SDL})
 elseif (OPTIONS_NORMAL_8BIT)
     set (BUILD_OPTIONS ${LVGL_TEST_OPTIONS_NORMAL_8BIT})
 elseif (OPTIONS_16BIT)
@@ -330,6 +336,14 @@ include_directories(${PNG_INCLUDE_DIR})
 find_package(Freetype REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
+if(OPTIONS_SDL)
+    find_package(SDL2 REQUIRED)
+    find_library(NAME SDL2_image REQUIRED)
+    link_libraries(SDL2_image)
+    include_directories(${SDL2_INCLUDE_DIRS})
+    include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+endif()
+
 # libinput is required for the libinput device driver test case
 find_package(Libinput OPTIONAL_COMPONENTS)
 if ($ENV{NON_AMD64_BUILD})
@@ -437,6 +451,8 @@ foreach( test_case_fname ${TEST_CASE_FILES} )
             lvgl_demos
             lvgl
             lvgl_thorvg
+            ${SDL_LIBRARY}
+            ${SDL_IMAGE_LIBRARY}
             ${PNG_LIBRARIES}
             ${FREETYPE_LIBRARIES}
             ${LIBDRM_LIBRARIES}

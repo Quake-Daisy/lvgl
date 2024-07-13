@@ -12,7 +12,6 @@
 #include "../../indev/lv_indev.h"
 #include "../../core/lv_group.h"
 #include "../../stdlib/lv_string.h"
-#include LV_SDL_INCLUDE_PATH
 
 /*********************
  *      DEFINES
