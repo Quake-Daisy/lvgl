@@ -16,6 +16,8 @@ extern "C" {
 #include "lv_sdl_window.h"
 #if LV_USE_SDL
 
+#include LV_SDL_INCLUDE_PATH
+
 /*********************
  *      DEFINES
  *********************/
@@ -32,6 +34,7 @@ extern "C" {
  **********************/
 
 lv_indev_t * lv_sdl_keyboard_create(void);
+void _lv_sdl_keyboard_handler(SDL_Event * event);
 
 /**********************
  *      MACROS

@@ -15,6 +15,13 @@
 #include "../../display/lv_display_private.h"
 #include "../../lv_init.h"
 
+#include "lv_sdl_keyboard.h"
+#include "lv_sdl_mouse.h"
+
+#if LV_SDL_MOUSEWHEEL_MODE == LV_SDL_MOUSEWHEEL_MODE_ENCODER
+    #include "lv_sdl_mousewheel.h"
+#endif
+
 /* for aligned_alloc */
 #ifndef __USE_ISOC11
     #define __USE_ISOC11
@@ -61,9 +68,9 @@ static void window_create(lv_display_t * disp);
 static void window_update(lv_display_t * disp);
 #if LV_USE_DRAW_SDL == 0
     static void texture_resize(lv_display_t * disp);
+    static void * sdl_draw_buf_realloc_aligned(void * ptr, size_t new_size);
+    static void sdl_draw_buf_free(void * ptr);
 #endif
-static void * sdl_draw_buf_realloc_aligned(void * ptr, size_t new_size);
-static void sdl_draw_buf_free(void * ptr);
 static void sdl_event_handler(lv_timer_t * t);
 static void release_disp_cb(lv_event_t * e);
 
@@ -71,9 +78,6 @@ static void release_disp_cb(lv_event_t * e);
  *   GLOBAL PROTOTYPES
  ***********************/
 lv_display_t * _lv_sdl_get_disp_from_win_id(uint32_t win_id);
-void _lv_sdl_mouse_handler(SDL_Event * event);
-void _lv_sdl_mousewheel_handler(SDL_Event * event);
-void _lv_sdl_keyboard_handler(SDL_Event * event);
 static void res_chg_event_cb(lv_event_t * e);
 
 static bool inited = false;
@@ -202,7 +206,7 @@ void * lv_sdl_window_get_renderer(lv_display_t * disp)
     return dsc->renderer;
 }
 
-void lv_sdl_quit()
+void lv_sdl_quit(void)
 {
     if(inited) {
         SDL_Quit();
@@ -291,6 +295,8 @@ static void flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * px_m
         window_update(disp);
     }
 #else
+    LV_UNUSED(area);
+    LV_UNUSED(px_map);
     if(lv_display_flush_is_last(disp)) {
         window_update(disp);
     }
@@ -439,7 +445,6 @@ static void texture_resize(lv_display_t * disp)
                                      SDL_TEXTUREACCESS_STATIC, disp->hor_res, disp->ver_res);
     SDL_SetTextureBlendMode(dsc->texture, SDL_BLENDMODE_BLEND);
 }
-#endif
 
 static void * sdl_draw_buf_realloc_aligned(void * ptr, size_t new_size)
 {
@@ -465,6 +470,7 @@ static void sdl_draw_buf_free(void * ptr)
     _aligned_free(ptr);
 #endif /* _WIN32 */
 }
+#endif
 
 static void res_chg_event_cb(lv_event_t * e)
 {
