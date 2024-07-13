@@ -451,8 +451,6 @@ foreach( test_case_fname ${TEST_CASE_FILES} )
             lvgl_demos
             lvgl
             lvgl_thorvg
-            ${SDL_LIBRARY}
-            ${SDL_IMAGE_LIBRARY}
             ${PNG_LIBRARIES}
             ${FREETYPE_LIBRARIES}
             ${LIBDRM_LIBRARIES}
@@ -461,6 +459,12 @@ foreach( test_case_fname ${TEST_CASE_FILES} )
             m
             pthread
             ${TEST_LIBS})
+
+    if(OPTIONS_SDL)
+        target_link_libraries(${test_name} PRIVATE
+                ${SDL_LIBRARY}
+                ${SDL_IMAGE_LIBRARY})
+    endif()
 
 	if (NOT $ENV{NON_AMD64_BUILD})
 	    target_link_libraries(${test_name} PRIVATE
